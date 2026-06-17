@@ -3,67 +3,109 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Forum jeu</title>
+  <title>Carnet de bord joueur</title>
 
-  <!-- ✅ Supabase (OBLIGATOIRE AVANT TON JS) -->
+  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    body {
+      font-family: Arial;
+      max-width: 700px;
+      margin: 40px auto;
+    }
+
+    input, button {
+      padding: 10px;
+      margin: 5px 0;
+    }
+
+    #players {
+      white-space: pre-wrap;
+      background: #f5f5f5;
+      padding: 10px;
+      margin-top: 20px;
+    }
+  </style>
 </head>
 
 <body>
 
-  <h1>Mon forum est en ligne</h1>
+  <h1>🎮 Carnet de bord joueur</h1>
 
-  <button onclick="addPlayer('test')">Ajouter joueur</button>
-  <button onclick="getPlayers()">Voir joueurs</button>
+  <p>Entre ton pseudo Forumactif :</p>
 
-  <div id="output"></div>
+  <input id="pseudo" placeholder="Pseudo joueur">
+
+  <button onclick="loginPlayer()">Accéder / enregistrer joueur</button>
+  <button onclick="loadPlayers()">Voir tous les joueurs</button>
+  <button onclick="deleteInactive()">Supprimer inactifs (30 jours)</button>
+
+  <div id="players"></div>
 
   <script>
     console.log("JS OK");
 
-    document.addEventListener("DOMContentLoaded", () => {
+    // 🔐 SUPABASE CONFIG
+    const supabaseUrl = "https://hcjloonjiezzervfbiqr.supabase.co";
+    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhjamxvb25qaWV6emVydmZiaXFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2NTE2NzQsImV4cCI6MjA5NzIyNzY3NH0.5fXERiMNdfYXuSFhWj6S0qDZm3WzjeownCzwOiX8Ahs";
 
-      // 🔐 CONFIG SUPABASE
-      const supabaseUrl = "https://hcjloonjiezzervfbiqr.supabase.co";
-      const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhjamxvb25qaWV6emVydmZiaXFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2NTE2NzQsImV4cCI6MjA5NzIyNzY3NH0.5fXERiMNdfYXuSFhWj6S0qDZm3WzjeownCzwOiX8Ahs";
+    const client = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-      // ⚠️ IMPORTANT : window.supabase (sinon crash)
-      const client = window.supabase.createClient(supabaseUrl, supabaseKey);
+    // 🟢 LOGIN / CRÉER OU METTRE À JOUR JOUEUR
+    window.loginPlayer = async function () {
 
-      // 🟢 AJOUTER UN JOUEUR
-      window.addPlayer = async function (pseudo) {
+      const pseudo = document.getElementById("pseudo").value.trim();
 
-        console.log("CLICK addPlayer");
+      if (!pseudo) {
+        alert("Entre un pseudo");
+        return;
+      }
 
-        const { data, error } = await client
-          .from("players")
-          .insert([
-            {
-              pseudo: pseudo,
-              last_seen: new Date()
-            }
-          ]);
+      const { data, error } = await client
+        .from("players")
+        .upsert([
+          {
+            pseudo: pseudo,
+            last_seen: new Date().toISOString()
+          }
+        ], { onConflict: "pseudo" });
 
-        console.log("INSERT :", data, error);
-      };
+      console.log("LOGIN:", data, error);
 
-      // 🟢 LIRE LES JOUEURS
-      window.getPlayers = async function () {
+      alert("Joueur enregistré / connecté !");
+    };
 
-        console.log("CLICK getPlayers");
+    // 🟢 AFFICHER TOUS LES JOUEURS
+    window.loadPlayers = async function () {
 
-        const { data, error } = await client
-          .from("players")
-          .select("*");
+      const { data, error } = await client
+        .from("players")
+        .select("*")
+        .order("last_seen", { ascending: false });
 
-        console.log("PLAYERS :", data, error);
+      console.log("PLAYERS:", data, error);
 
-        // affichage simple sur la page
-        document.getElementById("output").innerHTML =
-          JSON.stringify(data, null, 2);
-      };
+      document.getElementById("players").textContent =
+        JSON.stringify(data, null, 2);
+    };
 
-    });
+    // 🧹 SUPPRIMER INACTIFS (30 jours)
+    window.deleteInactive = async function () {
+
+      const limit = new Date();
+      limit.setDate(limit.getDate() - 30);
+
+      const { data, error } = await client
+        .from("players")
+        .delete()
+        .lt("last_seen", limit.toISOString());
+
+      console.log("DELETED:", data, error);
+
+      alert("Inactifs supprimés !");
+    };
+
   </script>
 
 </body>
