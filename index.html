@@ -2,8 +2,49 @@
 <html>
 <head>
   <title>Forum jeu</title>
+
+  <!-- 1. Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
+
 <body>
   <h1>Mon forum est en ligne</h1>
+
+  <button onclick="addPlayer('test')">Ajouter joueur</button>
+  <button onclick="getPlayers()">Voir joueurs</button>
+
+  <script>
+    // 2. CONFIG SUPABASE
+    const supabaseUrl = "TON_URL_ICI";
+    const supabaseKey = "TA_ANON_KEY_ICI";
+
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+
+    // 3. AJOUTER UN JOUEUR
+    async function addPlayer(pseudo) {
+      const { data, error } = await supabase
+        .from('players')
+        .insert([
+          {
+            pseudo: pseudo,
+            last_seen: new Date()
+          }
+        ]);
+
+      console.log("INSERT :", data, error);
+    }
+
+
+    // 4. LIRE LES JOUEURS
+    async function getPlayers() {
+      const { data, error } = await supabase
+        .from('players')
+        .select('*');
+
+      console.log("PLAYERS :", data, error);
+    }
+  </script>
+
 </body>
 </html>
