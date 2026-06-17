@@ -1,28 +1,71 @@
-<script>
-document.addEventListener("DOMContentLoaded", () => {
+<!DOCTYPE html>
+<html lang="fr">
 
-  console.log("JS OK");  <!-- 👈 ICI -->
+<head>
+  <meta charset="UTF-8">
+  <title>Forum jeu</title>
 
-  const supabaseUrl = "https://hcjloonjiezzervfbiqr.supabase.co";
-  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhjamxvb25qaWV6emVydmZiaXFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2NTE2NzQsImV4cCI6MjA5NzIyNzY3NH0.5fXERiMNdfYXuSFhWj6S0qDZm3WzjeownCzwOiX8Ahs";
+  <!-- ✅ Supabase (OBLIGATOIRE AVANT TON JS) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
 
-  const client = window.supabase.createClient(supabaseUrl, supabaseKey);
+<body>
 
-  window.addPlayer = async function(pseudo) {
-    const { data, error } = await client
-      .from("players")
-      .insert([{ pseudo, last_seen: new Date() }]);
+  <h1>Mon forum est en ligne</h1>
 
-    console.log(data, error);
-  };
+  <button onclick="addPlayer('test')">Ajouter joueur</button>
+  <button onclick="getPlayers()">Voir joueurs</button>
 
-  window.getPlayers = async function() {
-    const { data, error } = await client
-      .from("players")
-      .select("*");
+  <div id="output"></div>
 
-    console.log(data, error);
-  };
+  <script>
+    console.log("JS OK");
 
-});
-</script>
+    document.addEventListener("DOMContentLoaded", () => {
+
+      // 🔐 CONFIG SUPABASE
+      const supabaseUrl = "https://hcjloonjiezzervfbiqr.supabase.co";
+      const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhjamxvb25qaWV6emVydmZiaXFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2NTE2NzQsImV4cCI6MjA5NzIyNzY3NH0.5fXERiMNdfYXuSFhWj6S0qDZm3WzjeownCzwOiX8Ahs";
+
+      // ⚠️ IMPORTANT : window.supabase (sinon crash)
+      const client = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+      // 🟢 AJOUTER UN JOUEUR
+      window.addPlayer = async function (pseudo) {
+
+        console.log("CLICK addPlayer");
+
+        const { data, error } = await client
+          .from("players")
+          .insert([
+            {
+              pseudo: pseudo,
+              last_seen: new Date()
+            }
+          ]);
+
+        console.log("INSERT :", data, error);
+      };
+
+      // 🟢 LIRE LES JOUEURS
+      window.getPlayers = async function () {
+
+        console.log("CLICK getPlayers");
+
+        const { data, error } = await client
+          .from("players")
+          .select("*");
+
+        console.log("PLAYERS :", data, error);
+
+        // affichage simple sur la page
+        document.getElementById("output").innerHTML =
+          JSON.stringify(data, null, 2);
+      };
+
+    });
+  </script>
+
+</body>
+
+</html>
